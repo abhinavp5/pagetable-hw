@@ -21,7 +21,8 @@ size_t translate(size_t va){
     size_t vpn = va >> POBITS;
     int vpn_bits_per_level = POBITS - 3;
 
-    size_t * page_table = (size_t *) ptbr;//pointer to base page table entry 
+    //pointer to base page table entry
+    size_t * page_table = (size_t *) ptbr; 
     size_t pte;//page table entry
     
     //check for valid bit
@@ -35,6 +36,7 @@ size_t translate(size_t va){
         size_t index = vpn_for_level & ((1<< vpn_bits_per_level) - 1);
         pte = page_table[index];
 
+        //returning all 1s pte is invalid
         if((pte & 1) == 0){
             return ~0;
         }
@@ -62,16 +64,17 @@ void page_allocate(size_t va) {
     size_t vpn = va >> POBITS;  
     size_t *pg_table;
     void *new_page;
+    int mem_align_counts = 0; 
 
     // check valid bit if not then allocate
     if (ptbr == 0) {
+        mem_align_counts +=1;
         posix_memalign((void **)&ptbr, page_size, page_size);
         // intialziing page table to 0s
         for (int i = 0; i < page_size/sizeof(size_t); i++) {
             ((size_t *)ptbr)[i] = 0;
         }
     }
-    
     pg_table = (size_t *)ptbr;
     for (int i = 0; i < LEVELS; i++) {
         int shift_amount = (LEVELS - i -1) * vpn_bits_per_level;
@@ -82,6 +85,7 @@ void page_allocate(size_t va) {
 
         //allocating new page table if invalid
         if ((pte & 1) == 0) {
+            mem_align_counts +=1;
             posix_memalign(&new_page, page_size, page_size);
             // Initialize the new page table to 0
             for (int j = 0; j < page_size/sizeof(size_t); j++) {
@@ -92,6 +96,7 @@ void page_allocate(size_t va) {
         // Move to the next level page table
         pg_table = (size_t *)(pg_table[index] & ~((1 << POBITS) - 1));
     }
+    printf("NUM OF MEM_ALIGNS %i\n", mem_align_counts);
 }
 
 int main() {
@@ -102,7 +107,7 @@ int main() {
     // 5 pages have been allocated: 4 page tables and 1 data
     assert(ptbr != 0);
 
-    page_allocate(0x456789abcd00);
+    page_allocate(0x3456789abcd00);
     // no new pages allocated (still 5)
     
     int *p1 = (int *)translate(0x456789abcd00);
@@ -110,13 +115,13 @@ int main() {
     short *p2 = (short *)translate(0x456789abcd02);
     printf("%04hx\n", *p2); // prints "aabb\n"
 
-    assert(translate(0x456789ab0000) == 0xFFFFFFFFFFFFFFFF);
-    
-    page_allocate(0x456789ab0000);
-    // 1 new page allocated (now 6; 4 page table, 2 data)
-
-    assert(translate(0x456789ab0000) != 0xFFFFFFFFFFFFFFFF);
+    assert(translate(0x456780000000) == 0xFFFFFFFFFFFFFFFF);
     
     page_allocate(0x456780000000);
+    // 1 new page allocated (now 6; 4 page table, 2 data)
+
+    assert(translate(0x456780000000) != 0xFFFFFFFFFFFFFFFF);
+    
+    page_allocate(0x123456780000);
     // 2 new pages allocated (now 8; 5 page table, 3 data)
 }
