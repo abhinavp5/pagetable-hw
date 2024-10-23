@@ -111,6 +111,25 @@ $ ./main
 ```
 
 ## Acknowledgements
-Thanks to the TA's for helping with catching an error that I couldn't catch
+Thanks to the TA's for helping with catching an error that I couldn't catch, also I used 
+@Book{ArpaciDusseau23-Book,
+  author =       {Remzi H. Arpaci-Dusseau and Andrea C. Arpaci-Dusseau},
+  title =        "{Operating Systems: Three Easy Pieces}",
+  publisher =    {Arpaci-Dusseau Books},
+  month =        "November",
+  year =         {2023},
+  edition =      {1.10},
+}
+
+@Book{ArpaciDusseau18-Book,
+  author =       {Remzi H. Arpaci-Dusseau and Andrea C. Arpaci-Dusseau},
+  title =        "{Operating Systems: Three Easy Pieces}",
+  publisher =    {Arpaci-Dusseau Books},
+  month =        "August",
+  year =         {2018},
+  edition =      {1.00},
+}
+
+
 
 
