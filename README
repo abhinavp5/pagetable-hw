@@ -1,4 +1,5 @@
-#Page Table HW
+
+# Page Table HW
 
 ## Description
 CSO2 page table hw to learn about page tables and virtual memory
@@ -96,7 +97,7 @@ void page_deallocate(size_t va) {
 The Time complexity would be O(n) as n (the number of LEVELS increases) the run time would linearly increase, however the space compexity would be O(2^n) because the number of offset are key in determining the page sizes where n would (POBITS*LEVELs)
 
 ## Usage 
-In order to use this library, ensure you have all the dependencies, and then call make with makefile. Then in another make file you could do something like this
+In order to use this library, ensure you have all the dependencies, and then call make with makefile. Then in another make file you could include something like this, assuming the rest of the makefile is correct
 ```
 main: main.o
     $(CC) -o main main.o libmlpt.a
@@ -106,30 +107,12 @@ main.o: main.c mlpt.h
 ```
 this would link the static library  so that you can do something like 
 ```
-$ make
+$ make 
 $ ./main
 ```
 
+
 ## Acknowledgements
-Thanks to the TA's for helping with catching an error that I couldn't catch, also I used 
-@Book{ArpaciDusseau23-Book,
-  author =       {Remzi H. Arpaci-Dusseau and Andrea C. Arpaci-Dusseau},
-  title =        "{Operating Systems: Three Easy Pieces}",
-  publisher =    {Arpaci-Dusseau Books},
-  month =        "November",
-  year =         {2023},
-  edition =      {1.10},
-}
+Thanks to the TA's for helping catch an error that I couldn't catch, and also the textbook "Operating Systems: Three Easy Pieces"
 
-@Book{ArpaciDusseau18-Book,
-  author =       {Remzi H. Arpaci-Dusseau and Andrea C. Arpaci-Dusseau},
-  title =        "{Operating Systems: Three Easy Pieces}",
-  publisher =    {Arpaci-Dusseau Books},
-  month =        "August",
-  year =         {2018},
-  edition =      {1.00},
-}
-
-
-
-
+ **Remzi H. Arpaci-Dusseau, Andrea C. Arpaci-Dusseau**. *Operating Systems: Three Easy Pieces*, 1.10 edition, Arpaci-Dusseau Books, November 2023.
