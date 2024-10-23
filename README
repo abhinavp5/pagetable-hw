@@ -5,19 +5,112 @@ CSO2 page table hw to learn about page tables and virtual memory
 
 ##Table of Contents
 -[Customization](#customization)
+-[Tesing Hooks](#testing)
 -[Limitations](#limitations)
--[Big-O Analysis](#bigO)
+-[Big-O](#big-o-analysis)
+-[Acknowledgments](#acknowledgements)
 
 ## Customization
 LEVELS and POBITS are the 2 values that can be customized where LEVELS represent the number of LEVELS in the multi-levle page table look up and POBITS is the number offset bits.  2^(POBITS) is equivalent to the page size in kb. In the scenario where POBITS = 12 the page size would be 4096 KB. Increasing the number of offset bits would increase the page size and result in fewer PTEs needed to map the same amount of vm. Therefore more offset bits (larger pages) could lead to fewer page table lookups and lead to saving memory. Increasing the number of LEVELs results in more page table look up which is more computationally expensive. Similary increasing the number of POBITS. 
-## Limitations
-Currently there is no deallocation mechanism for freeing the allocated the memory allocated by posix_memalign.
 
-The number of LEVELS ust be between 1-6 and the number of POBITS must be between 4-18.
+## Testing 
+This was Testing hook that I used that works for LEVEL between 1-6 and POBITS between 4-18, it's a modified version of the one on the hw writeup where someof the adresses have been tweaked to accomandata for adjusting the page offsets
+```
+int main() {
+
+    // 0 pages have been allocated
+    assert(ptbr == 0);
+
+    page_allocate(0x456789abcdef);
+    // 5 pages have been allocated: 4 page tables and 1 data
+
+    assert(ptbr != 0);
+
+    page_allocate(0x456789abcd00);
+    // no new pages allocated (still 5) (because both the addresses map to the same page)
+    
+    //tranlsate adress to physical adress
+    int *p1 = (int *)translate(0x456789abcd00);
+    //assigns a value at the physical adress in memory
+    *p1 = 0xaabbccdd;
+    
+    //this should also be in the same allocated page
+    short *p2 = (short *)translate(0x456789abcd02);
+    printf("%04hx\n", *p2); // prints "aabb\n"
+
+    //checks translate for an unallocated Virtual adress
+    assert(translate(0x123456780000) == 0xFFFFFFFFFFFFFFFF);
+    
+    //now allocating that adress
+    page_allocate(0x123456780000);
+    // 1 new page allocated (now 6; 4 page table, 2 data)
+
+    //checking to see that the allocation worked
+    assert(translate(0x123456780000) != 0xFFFFFFFFFFFFFFFF);
+    
+    page_allocate(0x123456780000);
+    assert(translate(0x123456780000)!= 0xFFFFFFFFFFFFFFFF);
+    // 2 new pages allocated (now 8; 5 page table, 3 data)
+}
+```
+
+## Limitations
+Currently there is no deallocation mechanism for freeing the allocated the memory allocated by posix_memalign. A Potential way to have a function when given an virtual address, test whether it has been allocated and deallocate its memory. Here is a function (very similar to translate) that frees the physical page given the virtual address. You could also free the virtual adressess too with a seperate implementation in the method.
+```
+void page_deallocate(size_t va) {
+    int page_size = 1 << POBITS;
+    int vpn_bits_per_level = POBITS-3; 
+    size_t vpn = va >> POBITS;  
+    size_t * page_table = (size_t *)ptbr;
+    for(int i = 0; i< LEVELS; i++){
+        //same calculations as in page_allocate
+        int shift_amount = (LEVELS - i -1) * vpn_bits_per_level;
+        size_t vpn_for_level = vpn >> shift_amount;
+        size_t mask = (1 << vpn_bits_per_level) - 1;
+        size_t index = vpn_for_level & mask;
+        size_t pte = page_table[index];
+
+        //valid bit is not set memory is unallocated
+        if((pte & 1)==0){
+            return; 
+        }
+
+        if (i == LEVELS-1){
+            //setting the valid bit to 0 
+            page_table[index] &= 0;
+            
+            //valid bit mask
+            void *physical_page = (void *)(pte & 0);
+            free(physical_page);
+        } else{
+            page_table = (size_t *)(pte & 1);
+        }
+    }
+}
+
+```
+
 
 
 ## Big-O Analysis
 The Time complexity would be O(n) as n (the number of LEVELS increases) the run time would linearly increase, however the space compexity would be O(2^n) because the number of offset are key in determining the page sizes where n would (POBITS*LEVELs)
 
+## Usage 
+In order to use this library, ensure you have all the dependencies, and then call make with makefile. Then in another make file you could do something like this
+```
+main: main.o
+    $(CC) -o main main.o libmlpt.a
+
+main.o: main.c mlpt.h
+    #(CC) $(CFLAGS) - c main.c
+```
+this would link the static library  so that you can do something like 
+```
+$ make
+$ ./main
+```
+
 ## Acknowledgements
 Thanks to the TA's for helping with catching an error that I couldn't catch
+
+
