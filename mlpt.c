@@ -37,7 +37,7 @@ size_t translate(size_t va){
         pte = page_table[index];
 
         //returning all 1s pte is invalid
-        if((pte & 1) == 0){
+        if ((pte & 1) == 0){
             return ~0;
         }
 
@@ -96,38 +96,3 @@ void page_allocate(size_t va) {
 }
 
 
-
-int main() {
-
-    // 0 pages have been allocated
-    assert(ptbr == 0);
-    page_allocate(0x456789abcdef);
-    // 5 pages have been allocated: 4 page tables and 1 data
-    assert(ptbr != 0);
-
-    page_allocate(0x456789abcd00);
-    // no new pages allocated (still 5) (because both the addresses map to the same page)
-    
-    //tranlsate adress to physical adress
-    int *p1 = (int *)translate(0x456789abcd00);
-    //assigns a value at the physical adress in memory
-    *p1 = 0xaabbccdd;
-    
-    //this should also be in the same allocated page
-    short *p2 = (short *)translate(0x456789abcd02);
-    printf("%04hx\n", *p2); // prints "aabb\n"
-
-    //checks translate for an unallocated Virtual adress
-    assert(translate(0x123456780000) == 0xFFFFFFFFFFFFFFFF);
-    
-    //now allocating that adress
-    page_allocate(0x123456780000);
-    // 1 new page allocated (now 6; 4 page table, 2 data)
-
-    //checking to see that the allocation worked
-    assert(translate(0x123456780000) != 0xFFFFFFFFFFFFFFFF);
-    
-    page_allocate(0x123456780000);
-    assert(translate(0x123456780000)!= 0xFFFFFFFFFFFFFFFF);
-    // 2 new pages allocated (now 8; 5 page table, 3 data)
-}

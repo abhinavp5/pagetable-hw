@@ -1,5 +1,7 @@
 #ifndef MLPT_H_
 #define MLPT_H_
+#include <stddef.h>
+
 /**
  * Page table base register.
  * Declared here so tester code can look at it; because it is extern
